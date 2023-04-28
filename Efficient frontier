@@ -1,0 +1,36 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+exp_returns = np.array([0.10, 0.15, 0.20])
+cov_matrix = np.array([[0.05, 0.02, 0.01], 
+                      [0.02, 0.10, 0.03], 
+                      [0.01, 0.03, 0.15]])
+
+target_returns = np.linspace(0.10, 0.20, 100)
+
+n_assets = len(exp_returns)
+
+portfolio_returns = []
+portfolio_variances = []
+
+    weights = np.ones(n_assets) / n_assets
+
+    def obj_func(weights, exp_returns, cov_matrix, target_return):
+        portfolio_return = np.dot(weights, exp_returns)
+        portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
+        penalty = 1000 * abs(portfolio_return - target_return)
+        return portfolio_variance + penalty
+
+    import scipy.optimize as sco
+
+    result = sco.minimize(obj_func, weights, args=(exp_returns, cov_matrix, target_return),
+                          method='SLSQP', bounds=[(0, 1)]*n_assets, constraints=[{'type':'eq', 'fun': lambda x: sum(x) - 1}])
+
+    portfolio_returns.append(np.dot(result.x, exp_returns))
+    portfolio_variances.append(np.dot(result.x.T, np.dot(cov_matrix, result.x)))
+
+plt.plot(portfolio_variances, portfolio_returns)
+plt.title('Efficient Frontier')
+plt.xlabel('Portfolio Variance')
+plt.ylabel('Portfolio Expected Return')
+plt.show()
